@@ -21,8 +21,8 @@ void loop() {
   // LCD screen - 0x27
   byte lcd_address = 39;
   Wire.beginTransmission(lcd_address);
-  byte error = Wire.endTransmission();
-  if (error == 0) {
+  byte error_lcd = Wire.endTransmission();
+  if (error_lcd == 0) {
     Serial.print("LCD device found at address 0x");
     Serial.println(lcd_address, HEX);
     lcd_found = 1;
@@ -33,8 +33,8 @@ void loop() {
   // Fenyero mero - 0x39
   byte light_address = 57;
   Wire.beginTransmission(light_address);
-  byte error = Wire.endTransmission();
-  if (error == 0) {
+  byte error_ligt = Wire.endTransmission();
+  if (error_ligt == 0) {
     Serial.print("Light device found at address 0x");
     Serial.println(light_address, HEX);
     light_found = 1;
@@ -45,8 +45,8 @@ void loop() {
   // RTC clock mero - 0x68
   byte rtc_address = 104;
   Wire.beginTransmission(rtc_address);
-  byte error = Wire.endTransmission();
-  if (error == 0) {
+  byte error_clock = Wire.endTransmission();
+  if (error_clock == 0) {
     Serial.print("RTC clock found at address 0x");
     Serial.println(rtc_address, HEX);
     rtc_clock_found = 1;
