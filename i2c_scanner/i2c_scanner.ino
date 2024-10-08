@@ -30,7 +30,10 @@ void loop() {
         Serial.print("0");
         lcd.print("0")
       }
-      Serial.print(address, HEX);
+      Serial.println(address, HEX);
+      Serial.print("Address ");
+      Serial.print(address);
+
       lcd.print(address, HEX)
       Serial.println("  !");
  
