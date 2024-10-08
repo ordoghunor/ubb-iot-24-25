@@ -24,9 +24,6 @@ void loop() {
   byte error = Wire.endTransmission();
   if (error == 0) {
     Serial.print("LCD device found at address 0x");
-    if (address < 16) {
-      Serial.println("0");
-    }
     Serial.println(lcd_address, HEX);
     lcd_found = 1;
   } else {
@@ -39,9 +36,6 @@ void loop() {
   byte error = Wire.endTransmission();
   if (error == 0) {
     Serial.print("Light device found at address 0x");
-    if (address < 16) {
-      Serial.println("0");
-    }
     Serial.println(light_address, HEX);
     light_found = 1;
   } else {
@@ -54,9 +48,6 @@ void loop() {
   byte error = Wire.endTransmission();
   if (error == 0) {
     Serial.print("RTC clock found at address 0x");
-    if (address < 16) {
-      Serial.println("0");
-    }
     Serial.println(rtc_address, HEX);
     rtc_clock_found = 1;
   } else {
