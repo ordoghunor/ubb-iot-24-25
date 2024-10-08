@@ -1,11 +1,11 @@
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27,20,4);
+
+int lcd_found;
+int light_found;
+int rtc_clock_found;
 
 void setup() {
-  lcd.init();
-  lcd.backlight();
   Serial.begin(9600);
 
   Wire.begin();
@@ -17,42 +17,63 @@ void setup() {
 void loop() {
   int nDevices = 0;
   Serial.println("Scanning...");
-  lcd.setCursor(0,0);
  
-  for (byte address = 1; address < 127; ++address) {
-    Wire.beginTransmission(address);
-    byte error = Wire.endTransmission();
- 
-    if (error == 0) {
-      Serial.print("I2C device found at address 0x");
-      lcd.print("I2C device: ")
-      if (address < 16) {
-        Serial.print("0");
-        lcd.print("0")
-      }
-      Serial.println(address, HEX);
-      Serial.print("Address ");
-      Serial.print(address);
-
-      lcd.print(address, HEX)
-      Serial.println("  !");
- 
-      ++nDevices;
-    } else if (error == 4) {
-      Serial.print("Unknown error at address 0x");
-      if (address < 16) {
-        Serial.print("0");
-      }
-      Serial.println(address, HEX);
+  // LCD screen - 0x27
+  byte lcd_address = 39;
+  Wire.beginTransmission(lcd_address);
+  byte error = Wire.endTransmission();
+  if (error == 0) {
+    Serial.print("LCD device found at address 0x");
+    if (address < 16) {
+      Serial.println("0");
     }
-  }
-  if (nDevices == 0) {
-    Serial.println("No I2C devices found\n");
-    lcd.print("No I2C devices found.")
+    Serial.println(lcd_address, HEX);
+    lcd_found = 1;
   } else {
-    Serial.println("done\n");
+    lcd_found = 0;
   }
+
+  // Fenyero mero - 0x39
+  byte light_address = 57;
+  Wire.beginTransmission(light_address);
+  byte error = Wire.endTransmission();
+  if (error == 0) {
+    Serial.print("Light device found at address 0x");
+    if (address < 16) {
+      Serial.println("0");
+    }
+    Serial.println(light_address, HEX);
+    light_found = 1;
+  } else {
+    light_found = 0;
+  }
+
+  // RTC clock mero - 0x68
+  byte rtc_address = 104;
+  Wire.beginTransmission(rtc_address);
+  byte error = Wire.endTransmission();
+  if (error == 0) {
+    Serial.print("RTC clock found at address 0x");
+    if (address < 16) {
+      Serial.println("0");
+    }
+    Serial.println(rtc_address, HEX);
+    rtc_clock_found = 1;
+  } else {
+    rtc_clock_found = 0;
+  }
+
+  if (lcd_found == 0) { 
+    Serial.println("LCD device not found\n");
+  } 
+  if (light_found == 0) {
+    Serial.println("Light device not found\n");
+  } 
+  if (rtc_clock_found == 0) {
+    Serial.println("RTC clock not found\n");
+  } 
+
+  Serial.println("done\n");
   delay(1000);
 
-  lcd.clear();
 }
