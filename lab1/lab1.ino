@@ -35,32 +35,37 @@ void setup() {
 
   lcd.setCursor(0,1);
   lcd.print("Temp: ");
-}
 
-void loop() {
-
-  // ============ DHT ============
   float h = dht.readHumidity();
   float t = dht.readTemperature();
   
   if (isnan(h) || isnan(t)) {
     dht_fail = 1;
   }
+}
+
+void loop() {
+
+  // ============ DHT ============
 
   Serial.print("Humidity: ");
   lcd.setCursor(10,0);
   if (dht_fail) {
-    lcd.print("error"); Serial.println("error");
+    lcd.print("error");
+    Serial.println("error");
   } else {
-    lcd.print(h); Serial.println(h);
+    lcd.print(h);
+    Serial.println(h);
   }
   
   Serial.print("Temp: ");
   lcd.setCursor(6,1);
   if (dht_fail) {  
-    lcd.print("error"); Serial.println("error");
+    lcd.print("error");
+    Serial.println("error");
   } else {
-    lcd.print(t); Serial.println(t);
+    lcd.print(t);
+    Serial.println(t);
   }
   Serial.println();
 
