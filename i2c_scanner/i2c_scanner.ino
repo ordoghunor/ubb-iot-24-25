@@ -64,13 +64,13 @@ void loop() {
   }
 
   if (lcd_found == 0) { 
-    Serial.println("LCD device not found\n");
+    Serial.println("LCD device not found");
   } 
   if (light_found == 0) {
-    Serial.println("Light device not found\n");
+    Serial.println("Light device not found");
   } 
   if (rtc_clock_found == 0) {
-    Serial.println("RTC clock not found\n");
+    Serial.println("RTC clock not found");
   } 
 
   Serial.println("done\n");
