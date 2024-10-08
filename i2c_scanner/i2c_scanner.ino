@@ -15,7 +15,6 @@ void setup() {
 }
  
 void loop() {
-  int nDevices = 0;
   Serial.println("Scanning...");
  
   // LCD screen - 0x27
