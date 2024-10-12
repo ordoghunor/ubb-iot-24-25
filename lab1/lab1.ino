@@ -96,7 +96,7 @@ void loop() {
   } else {
     if (lcd_found) {
       lcd.print(h); 
-      lcd.print(" % "); 
+      lcd.print("% | "); 
     }
     Serial.println(h);
   }
@@ -123,7 +123,7 @@ void loop() {
     Serial.println(gomb_allapota);
     if (lcd_found) {
       lcd.setCursor(12,1);
-      lcd.print("| gomb=");
+      lcd.print("| gomb:");
       lcd.print(gomb_allapota);
     }
     gomb_regi_allapota = gomb_allapota;
@@ -160,14 +160,14 @@ void printMode() {
   if (manual_mode == 1) {
     Serial.println("Manualis mod");
     if (lcd_found) {
-    lcd.setCursor(13,0);
-    lcd.print("Mode: M");
+    lcd.setCursor(14,0);
+    lcd.print("Mod: M");
   }
   } else {
     Serial.println("Automata mod");
     if (lcd_found) {
-    lcd.setCursor(13,0);
-    lcd.print("Mode: A");
+    lcd.setCursor(14,0);
+    lcd.print("Mod: A");
   }
   }
   
