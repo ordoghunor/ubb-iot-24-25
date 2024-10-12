@@ -31,6 +31,9 @@ bool pmFlag;
 // light sensor
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
 
+int manual_mode = 0;
+unsigned long manual_start_time = 0;
+
 void setup() {
   pinMode(A0,INPUT_PULLUP);
   gomb_regi_allapota = digitalRead(A0);
@@ -114,21 +117,41 @@ void loop() {
       lcd.print(gomb_allapota);
     }
     gomb_regi_allapota = gomb_allapota;
+    // start manual mode
+    manual_mode = 1;
+    Serial.println("Manualis modra valtva");
+    manual_start_time = millis();
   }
   // ============= RTC Clock =============
   if (rtc_clock_found) {
     printTime();
   }
+  // ============= Light sensor =============
   if (light_found) {
-    printLight();
+    checkLight();
   }
+  // ============= Mode =============
+  printMode();
 
+  // check manual mode end, reset after 3 seconds
+  if (manual_mode == 1 && millis() - manual_start_time >= 3000) {
+    manual_mode = 0;  
+    Serial.println("Manualis mod vege");
+  }
   Serial.println();
   delay(250);
 }
 
 
-void printLight() {
+void printMode() {
+  if (manual_mode == 1) {
+    Serial.println("Manualis mod");
+  } else {
+    Serial.println("Automata mod");
+  }
+}
+
+void checkLight() {
   sensors_event_t event;
   tsl.getEvent(&event);
   if (event.light) {
@@ -138,6 +161,9 @@ void printLight() {
       lcd.print("Feny: ");
       lcd.print(event.light);
       lcd.print(" lux");
+    }
+    if (event.light > 1000) {
+      // over 1000 - start motor
     }
   } else {
     Serial.println("Sensor overload");
