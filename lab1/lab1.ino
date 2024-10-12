@@ -57,6 +57,10 @@ void setup() {
   lcd.setCursor(0,1);
   lcd.print("Temp: ");
 
+  if(light_found) {
+    tsl.begin();
+    configureTslSensor();
+  }
 
 }
 
@@ -125,8 +129,33 @@ void loop() {
 
 
 void printLight() {
-  
+  sensors_event_t event;
+  tsl.getEvent(&event);
+  if (event.light) {
+    Serial.print(event.light); Serial.println(" lux");
+    if (lcd_found) {
+      lcd.setCursor(0,3);
+      lcd.print("Feny: ");
+      lcd.print(event.light);
+      lcd.print(" lux");
+    }
+  } else {
+    Serial.println("Sensor overload");
+    if (lcd_found) {
+      lcd.setCursor(0,3);
+      lcd.print("Feny: error");
+    }
+  }
 }
+
+
+void configureTslSensor(void) {
+  tsl.enableAutoRange(true); 
+  tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);
+  Serial.println("Tsl Gain: Auto");
+  Serial.println("Timing: 13 ms");
+}
+
 
 void printTime() {
   String timeStr = "";
