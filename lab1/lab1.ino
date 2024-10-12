@@ -47,7 +47,6 @@ void setup() {
 
   lcd.init();
   lcd.backlight();
-// lcd.setBacklight(10);
   dht.begin();
   dht_fail = 0;
 
@@ -73,7 +72,6 @@ void setup() {
   }
 
   myStepper.setSpeed(60);
-
 }
 
 void loop() {
@@ -179,7 +177,7 @@ void checkLight() {
   if (event.light) {
     Serial.print(event.light); Serial.println(" lux");
     if (lcd_found) {
-      lcd.setCursor(0,3);
+      lcd.setCursor(0,2);
       lcd.print("Feny: ");
       lcd.print(event.light);
       lcd.print(" lux   ");
@@ -192,7 +190,7 @@ void checkLight() {
   } else {
     Serial.println("Sensor overload");
     if (lcd_found) {
-      lcd.setCursor(0,3);
+      lcd.setCursor(0,2);
       lcd.print("Feny: error");
     }
   }
@@ -208,7 +206,7 @@ void configureTslSensor(void) {
 
 
 void printTime() {
-  String timeStr = "";
+  String timeStr = "20";
   timeStr += String(myRTC.getYear(), DEC);
   timeStr += ".";
   timeStr += String(myRTC.getMonth(century), DEC);
@@ -221,10 +219,10 @@ void printTime() {
   timeStr += ":";
   timeStr += String(myRTC.getSecond(), DEC);
 
+  Serial.print("Time: ");
   Serial.println(timeStr);
   if (lcd_found) {
-    lcd.setCursor(0,2);
-    lcd.print("Time: "); 
+    lcd.setCursor(0,3); 
     lcd.print(timeStr);
   }
 }
