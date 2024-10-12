@@ -62,7 +62,7 @@ void setup() {
   lcd.print(gomb_allapota);
 
   lcd.setCursor(0,0);
-  lcd.print("Humidity: ");
+  lcd.print("Hum: ");
 
   lcd.setCursor(0,1);
   lcd.print("Temp: ");
@@ -87,7 +87,7 @@ void loop() {
   }
 
   Serial.print("Humidity: ");
-  lcd.setCursor(10,0);
+  lcd.setCursor(5,0);
   if (dht_fail) {
     if (lcd_found) {
       lcd.print("error"); 
@@ -96,6 +96,7 @@ void loop() {
   } else {
     if (lcd_found) {
       lcd.print(h); 
+      lcd.print(" % "); 
     }
     Serial.println(h);
   }
@@ -128,6 +129,7 @@ void loop() {
     gomb_regi_allapota = gomb_allapota;
     // start manual mode
     manual_mode = 1;
+    printMode();
     Serial.println("Manualis modra valtva");
     manual_start_time = millis();
     // motor step
@@ -157,9 +159,18 @@ void loop() {
 void printMode() {
   if (manual_mode == 1) {
     Serial.println("Manualis mod");
+    if (lcd_found) {
+    lcd.setCursor(13,0);
+    lcd.print("Mode: M");
+  }
   } else {
     Serial.println("Automata mod");
+    if (lcd_found) {
+    lcd.setCursor(13,0);
+    lcd.print("Mode: A");
   }
+  }
+  
 }
 
 void checkLight() {
@@ -171,7 +182,7 @@ void checkLight() {
       lcd.setCursor(0,3);
       lcd.print("Feny: ");
       lcd.print(event.light);
-      lcd.print(" lux");
+      lcd.print(" lux   ");
     }
     if (event.light > 1000) {
       // over 1000 - start motor
@@ -213,6 +224,7 @@ void printTime() {
   Serial.println(timeStr);
   if (lcd_found) {
     lcd.setCursor(0,2);
+    lcd.print("Time: "); 
     lcd.print(timeStr);
   }
 }
