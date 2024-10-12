@@ -47,7 +47,7 @@ void setup() {
 
   lcd.init();
   lcd.backlight();
-
+// lcd.setBacklight(10);
   dht.begin();
   dht_fail = 0;
 
@@ -72,7 +72,7 @@ void setup() {
     configureTslSensor();
   }
 
-  myStepper.setSpeed(30);
+  myStepper.setSpeed(60);
 
 }
 
