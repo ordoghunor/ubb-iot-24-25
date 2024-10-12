@@ -6,6 +6,8 @@
 // light sensor 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_TSL2561_U.h>
+// motor
+#include <Stepper.h>
 
 #define DHTPIN A3
 #define DHTTYPE DHT11
@@ -33,6 +35,11 @@ Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 1234
 
 int manual_mode = 0;
 unsigned long manual_start_time = 0;
+
+// motor
+const int stepsPerRevolution = 200;
+Stepper myStepper(stepsPerRevolution, 8, 9, 10, 11);
+
 
 void setup() {
   pinMode(A0,INPUT_PULLUP);
@@ -64,6 +71,8 @@ void setup() {
     tsl.begin();
     configureTslSensor();
   }
+
+  myStepper.setSpeed(30);
 
 }
 
@@ -121,6 +130,8 @@ void loop() {
     manual_mode = 1;
     Serial.println("Manualis modra valtva");
     manual_start_time = millis();
+    // motor step
+    myStepper.step(stepsPerRevolution);
   }
   // ============= RTC Clock =============
   if (rtc_clock_found) {
@@ -164,6 +175,8 @@ void checkLight() {
     }
     if (event.light > 1000) {
       // over 1000 - start motor
+      // motor step
+      myStepper.step(stepsPerRevolution);
     }
   } else {
     Serial.println("Sensor overload");
