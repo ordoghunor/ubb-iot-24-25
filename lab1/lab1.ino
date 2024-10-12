@@ -3,6 +3,9 @@
 #include <Wire.h>
 // clock
 #include <DS3231.h>
+// light sensor 
+#include <Adafruit_Sensor.h>
+#include <Adafruit_TSL2561_U.h>
 
 #define DHTPIN A3
 #define DHTTYPE DHT11
@@ -25,6 +28,8 @@ bool century = false;
 bool h12Flag;
 bool pmFlag;
 
+// light sensor
+Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
 
 void setup() {
   pinMode(A0,INPUT_PULLUP);
@@ -38,6 +43,9 @@ void setup() {
 
   Serial.begin(9600);
 
+  Wire.begin();
+  checkI2cDevices();
+
   gomb_allapota = digitalRead(A0);
   lcd.setCursor(12,1);
   lcd.print("| gomb=");
@@ -49,8 +57,7 @@ void setup() {
   lcd.setCursor(0,1);
   lcd.print("Temp: ");
 
-  Wire.begin();
-  checkI2cDevices();
+
 }
 
 void loop() {
@@ -66,17 +73,29 @@ void loop() {
   Serial.print("Humidity: ");
   lcd.setCursor(10,0);
   if (dht_fail) {
-    lcd.print("error"); Serial.println("error");
+    if (lcd_found) {
+      lcd.print("error"); 
+    }
+    Serial.println("error");
   } else {
-    lcd.print(h); Serial.println(h);
+    if (lcd_found) {
+      lcd.print(h); 
+    }
+    Serial.println(h);
   }
   
   Serial.print("Temp: ");
   lcd.setCursor(6,1);
   if (dht_fail) {  
-    lcd.print("error"); Serial.println("error");
+    if (lcd_found) {
+      lcd.print("error");
+    } 
+    Serial.println("error");
   } else {
-    lcd.print(t); Serial.println(t);
+    if (lcd_found) {
+      lcd.print(t); 
+    }
+    Serial.println(t);
   }
 
   // ============ Gomb ============
@@ -85,18 +104,29 @@ void loop() {
   {
     Serial.print("gomb allapota = ");
     Serial.println(gomb_allapota);
-    lcd.setCursor(12,1);
-    lcd.print("| gomb=");
-    lcd.print(gomb_allapota);
+    if (lcd_found) {
+      lcd.setCursor(12,1);
+      lcd.print("| gomb=");
+      lcd.print(gomb_allapota);
+    }
     gomb_regi_allapota = gomb_allapota;
   }
   // ============= RTC Clock =============
-  printTime();
+  if (rtc_clock_found) {
+    printTime();
+  }
+  if (light_found) {
+    printLight();
+  }
 
   Serial.println();
   delay(250);
 }
 
+
+void printLight() {
+  
+}
 
 void printTime() {
   String timeStr = "";
@@ -113,8 +143,10 @@ void printTime() {
   timeStr += String(myRTC.getSecond(), DEC);
 
   Serial.println(timeStr);
-  lcd.setCursor(0,2);
-  lcd.print(timeStr);
+  if (lcd_found) {
+    lcd.setCursor(0,2);
+    lcd.print(timeStr);
+  }
 }
 
 
