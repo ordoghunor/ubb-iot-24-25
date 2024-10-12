@@ -1,6 +1,8 @@
 #include <LiquidCrystal_I2C.h>
 #include "DHT.h"
 #include <Wire.h>
+// clock
+#include <DS3231.h>
 
 #define DHTPIN A3
 #define DHTTYPE DHT11
@@ -17,6 +19,12 @@ int dht_fail;
 int lcd_found;
 int light_found;
 int rtc_clock_found;
+
+DS3231 myRTC;
+bool century = false;
+bool h12Flag;
+bool pmFlag;
+
 
 void setup() {
   pinMode(A0,INPUT_PULLUP);
@@ -70,7 +78,6 @@ void loop() {
   } else {
     lcd.print(t); Serial.println(t);
   }
-  Serial.println();
 
   // ============ Gomb ============
   gomb_allapota = digitalRead(A0);
@@ -83,8 +90,31 @@ void loop() {
     lcd.print(gomb_allapota);
     gomb_regi_allapota = gomb_allapota;
   }
+  // ============= RTC Clock =============
+  printTime();
 
+  Serial.println();
   delay(250);
+}
+
+
+void printTime() {
+  String timeStr = "";
+  timeStr += String(myRTC.getYear(), DEC);
+  timeStr += ".";
+  timeStr += String(myRTC.getMonth(century), DEC);
+  timeStr += ".";
+  timeStr += String(myRTC.getDate(), DEC);
+  timeStr += " ";
+  timeStr += String(myRTC.getHour(h12Flag, pmFlag), DEC); // 24-hr
+  timeStr += ":";
+  timeStr += String(myRTC.getMinute(), DEC);
+  timeStr += ":";
+  timeStr += String(myRTC.getSecond(), DEC);
+
+  Serial.println(timeStr);
+  lcd.setCursor(0,2);
+  lcd.print(timeStr);
 }
 
 
