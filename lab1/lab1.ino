@@ -215,9 +215,17 @@ void printTime() {
   timeStr += " ";
   timeStr += String(myRTC.getHour(h12Flag, pmFlag), DEC); // 24-hr
   timeStr += ":";
-  timeStr += String(myRTC.getMinute(), DEC);
+  String min = String(myRTC.getMinute(), DEC);
+  if (min.toInt() < 10) {
+    timeStr += "0";
+  }
+  timeStr += min;
   timeStr += ":";
-  timeStr += String(myRTC.getSecond(), DEC);
+  String sec = String(myRTC.getSecond(), DEC);
+  if (sec.toInt() < 10) {
+    timeStr += "0";
+  }
+  timeStr += sec;
 
   Serial.print("Time: ");
   Serial.println(timeStr);
