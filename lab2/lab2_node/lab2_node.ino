@@ -1,5 +1,5 @@
 #include<SPI.h>
-
+#include <ESP8266WiFi.h>
 
 SPISettings spi_settings(100000, MSBFIRST, SPI_MODE0); 
 //100 kHz
@@ -25,9 +25,32 @@ unsigned long previousMillis = 0;
 const long interval = 1000;
 
 
+const char* ssid = "Mateinfo";
+const char* password = "computer";
+WiFiServer server(80);
+
+
+
+
 void setup() {  
- Serial.begin(9600);  
- SPI.begin();
+  Serial.begin(9600);  
+  SPI.begin();
+
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  server.begin();
+  Serial.println("Server started");
+  Serial.print("Use this URL to connect: ");
+  Serial.print("http://");
+  Serial.print(WiFi.localIP());
+  Serial.println("/");
 }
 
 void loop() {
@@ -37,9 +60,92 @@ void loop() {
     updateSensorData();
   };
 
+  WiFiClient client = server.available();
+  if (!client) {
+    return;
+  }
+
+    // Read the first line of the request
+  String request = client.readStringUntil('\r');
+  Serial.println(request);
+  client.flush();
+  if (request.startsWith("GET /startMotor")) {
+    handleMotorStart(client, request);
+  } else {
+    sendResponse(client);
+  }
+  client.stop();
+
   delay(10);  
 }
 
+void handleMotorStart(WiFiClient client, String request) {
+  int duration = -1;
+
+  if (request.indexOf("duration=") >= 0) {
+    int startIndex = request.indexOf("duration=") + 9;
+    int endIndex = request.indexOf(' ', startIndex);
+    String durationStr = request.substring(startIndex, endIndex);
+    duration = durationStr.toInt();
+  }
+
+  if (duration >= 0 && duration <= 6) {
+    startMotor((byte)duration);
+    sendResponse(client, true)
+  } else {
+    client.println("HTTP/1.1 400 Bad Request");
+    client.println("Content-Type: text/plain");
+    client.println("");
+    client.println("Invalid duration.");
+  }
+}
+
+void sendResponse(WiFiClient client, bool motor_start_req = false) {
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/html");
+  client.println("");
+  client.println("<!DOCTYPE HTML>");
+  client.println("<html>");
+  client.println("<head>");
+  client.println("<style>");
+  client.println("h1 { color: #333; }");
+  client.println("p { font-size: 18px; }");
+  client.println(".sensor-data { margin: 0 50px; }");
+  client.println("button { margin-top: 10px; }");
+  client.println("</style>");
+  client.println("</head>");
+
+  client.println("<body>");
+  client.println("<h1>Sensor Data</h1>");
+  client.println("<div class='sensor-data'>");
+  client.println("<p><strong>Date:</strong> " + dateString + "</p>");
+  client.println("<p><strong>Light:</strong> " + lightString + " Lux</p>");
+  client.println("<p><strong>Humidity:</strong> " + humidityString + " %</p>");
+  client.println("<p><strong>Temperature:</strong> " + temperatureString + " °C</p>");
+  client.println("<p><strong>Button State:</strong> " + buttonString + "</p>");
+  if (motor_start_req) {
+    client.println("Motor started for " + String(duration) + " seconds.");
+  }
+  client.println("</div>");
+
+  client.println("<div class='motor-control' style='margin: 0 20px;'>");
+  client.println("<label for='duration'>Motor Duration (0-6 seconds):</label>");
+  client.println("<input type='number' id='duration' name='duration' min='0' max='6' value='0'>");
+  client.println("<button onclick='startMotor()'>Start Motor</button>");
+  client.println("</div>");
+
+  client.println("<script>");
+  client.println("function startMotor() {");
+  client.println("  var duration = document.getElementById('duration').value;");
+  client.println("  var xhr = new XMLHttpRequest();");
+  client.println("  xhr.open('GET', '/startMotor?duration=' + duration, true);");
+  client.println("  xhr.send();");
+  client.println("}");
+  client.println("</script>");
+
+  client.println("</body>");
+  client.println("</html>");
+}
 
 void startMotor(byte duration) {
   SPI.beginTransaction(spi_settings);
