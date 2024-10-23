@@ -352,6 +352,7 @@ ISR(SPI_STC_vect) {
     case 'h': checksum += (SPDR = humidity); break;
     case 't': checksum += (SPDR = temperature); break;
     case 'b': checksum += (SPDR = button); break;
+    case 'r': checksum += (SPDR = motor_started); break;
     case 'c': SPDR = checksum; Serial.println("Data sent, sending checksum"); break;
     case 'm': motor_started = true; break;
     default:

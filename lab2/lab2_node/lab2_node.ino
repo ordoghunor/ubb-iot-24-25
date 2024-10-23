@@ -14,15 +14,17 @@ byte light;
 byte humidity;
 byte temperature;
 byte button;
+byte motorRunning;
 
 String dateString;
 String lightString;
 String humidityString;
 String temperatureString;
 String buttonString;
+String motorRunningString;
 
 unsigned long previousMillis = 0;
-const long interval = 1000;
+const long interval = 600;
 
 
 const char* ssid = "Mateinfo";
@@ -123,6 +125,7 @@ void sendResponse(WiFiClient client, bool motor_start_req = false) {
   client.println("<p><strong>Humidity:</strong> " + humidityString + " %</p>");
   client.println("<p><strong>Temperature:</strong> " + temperatureString + " °C</p>");
   client.println("<p><strong>Button State:</strong> " + buttonString + "</p>");
+  client.println("<p><strong>Motor Running:</strong> " + motorRunningString + "</p>");
   if (motor_start_req) {
     client.println("Motor started for " + String(duration) + " seconds.");
   }
@@ -170,6 +173,7 @@ void updateSensorData() {
     humidityString = String(humidity, DEC);
     temperatureString = String(temperature, DEC);
     buttonString = String(button, DEC);
+    motorRunningString = String(motorRunning);
   }
 }
 
@@ -213,7 +217,8 @@ byte requestData() {
   light = SPI.transfer('h');
   humidity = SPI.transfer('t');
   temperature = SPI.transfer('b');
-  button = SPI.transfer('c');
+  button = SPI.transfer('r');
+  motorRunning = SPI.transfer('c');
   byte receivedChecksum = SPI.transfer('.');
 
   SPI.endTransaction();
