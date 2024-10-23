@@ -48,6 +48,21 @@ unsigned long manual_start_time = 0;
 const int stepsPerRevolution = 200;
 Stepper myStepper(stepsPerRevolution, 8, 9, 10, 11);
 
+// data
+
+byte year;
+byte month;
+byte day;
+byte hour;
+byte minute;
+byte second;
+byte light;
+byte humidity;
+byte temperature;
+byte button;
+
+byte checksum;
+
 
 void setup() {
   pinMode(A0,INPUT_PULLUP);
@@ -94,6 +109,7 @@ void loop() {
   float h = dht.readHumidity();
   float t = dht.readTemperature();
   
+  dht_fail = 0;
   if (isnan(h) || isnan(t)) {
     dht_fail = 1;
   }
@@ -106,6 +122,7 @@ void loop() {
     }
     Serial.println("error");
   } else {
+    humidity = h;
     if (lcd_found) {
       lcd.print(h); 
       lcd.print("% | "); 
@@ -121,6 +138,7 @@ void loop() {
     } 
     Serial.println("error");
   } else {
+    temperature = t;
     if (lcd_found) {
       lcd.print(t); 
     }
@@ -129,8 +147,7 @@ void loop() {
 
   // ============ Gomb ============
   gomb_allapota = digitalRead(A0);
-  if (gomb_allapota!=gomb_regi_allapota)
-  {
+  if (gomb_allapota!=gomb_regi_allapota) {
     Serial.print("gomb allapota = ");
     Serial.println(gomb_allapota);
     if (lcd_found) {
@@ -139,6 +156,7 @@ void loop() {
       lcd.print(gomb_allapota);
     }
     gomb_regi_allapota = gomb_allapota;
+    button = gomb_allapota;
     // start manual mode
     manual_mode = 1;
     printMode();
@@ -189,6 +207,7 @@ void checkLight() {
   sensors_event_t event;
   tsl.getEvent(&event);
   if (event.light) {
+    light = event.light;
     Serial.print(event.light); Serial.println(" lux");
     if (lcd_found) {
       lcd.setCursor(0,2);
@@ -221,21 +240,27 @@ void configureTslSensor(void) {
 
 void printTime() {
   String timeStr = "20";
-  timeStr += String(myRTC.getYear(), DEC);
+  year = myRTC.getYear();
+  timeStr += String(year, DEC);
   timeStr += ".";
-  timeStr += String(myRTC.getMonth(century), DEC);
+  month = myRTC.getMonth(century);
+  timeStr += String(month, DEC);
   timeStr += ".";
-  timeStr += String(myRTC.getDate(), DEC);
+  day = myRTC.getDate();
+  timeStr += String(day, DEC);
   timeStr += " ";
-  timeStr += String(myRTC.getHour(h12Flag, pmFlag), DEC); // 24-hr
+  hour = myRTC.getHour(h12Flag, pmFlag); // 24-hr
+  timeStr += String(hour, DEC); 
   timeStr += ":";
-  String min = String(myRTC.getMinute(), DEC);
+  minute = myRTC.getMinute();
+  String min = String(minute, DEC);
   if (min.toInt() < 10) {
     timeStr += "0";
   }
   timeStr += min;
   timeStr += ":";
-  String sec = String(myRTC.getSecond(), DEC);
+  second = myRTC.getSecond();
+  String sec = String(second, DEC);
   if (sec.toInt() < 10) {
     timeStr += "0";
   }
@@ -294,19 +319,22 @@ void checkI2cDevices() {
 
 
 //SPI interrupt routine
-ISR(SPI_STC_vect)
-{
-
-  //kiolvassuk a kapott karaktert
+ISR(SPI_STC_vect) {
   char c = SPDR;
-
-  if (c=='t')
-    SPDR = temperature;
-  else if (c=='h')
-    SPDR = humidity;
-  else if (c=='0')
-    motorforgas = 0;
-  else if (c='m')
-    motorforgas = 1;
+  switch (c) {
+    case 'd': checksum = 0; break; // start data req
+    case '1': checksum += (SPDR = year); break;
+    case '2': checksum += (SPDR = month); break;
+    case '3': checksum += (SPDR = day); break;
+    case '4': checksum += (SPDR = hour); break;
+    case '5': checksum += (SPDR = minute); break;
+    case '6': checksum += (SPDR = second); break;
+    case 'l': checksum += (SPDR = light); break;
+    case 'h': checksum += (SPDR = humidity); break;
+    case 't': checksum += (SPDR = temperature); break;
+    case 'b': checksum += (SPDR = button); break;
+    case 'c': SPDR = checksum; break;
+    default: break;
+  }
   
 }
