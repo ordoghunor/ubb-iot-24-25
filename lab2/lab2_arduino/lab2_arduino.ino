@@ -21,9 +21,6 @@ LiquidCrystal_I2C lcd(0x27,20,4);
 
 SPISettings spi_settings(100000, MSBFIRST, SPI_MODE0);
 
-int pinDHT11 = A3;
-SimpleDHT11 dht11(pinDHT11);
-
 int gomb_allapota;
 int gomb_regi_allapota;
 
@@ -333,7 +330,7 @@ void checkI2cDevices() {
 void startMotor(byte duration) {
   Serial.println("Starting motor from node");
   motor_started_time = millis();
-  motor_run_time = duration * 1000
+  motor_run_time = duration * 1000;
 }
 
 
@@ -346,7 +343,7 @@ ISR(SPI_STC_vect) {
     case 'M': checksum += (SPDR = month); break;
     case 'D': checksum += (SPDR = day); break;
     case 'H': checksum += (SPDR = hour); break;
-    case 'M': checksum += (SPDR = minute); break;
+    case 'm': checksum += (SPDR = minute); break;
     case 'S': checksum += (SPDR = second); break;
     case 'l': checksum += (SPDR = light); break;
     case 'h': checksum += (SPDR = humidity); break;
@@ -354,7 +351,7 @@ ISR(SPI_STC_vect) {
     case 'b': checksum += (SPDR = button); break;
     case 'r': checksum += (SPDR = motor_started); break;
     case 'c': SPDR = checksum; Serial.println("Data sent, sending checksum"); break;
-    case 'm': motor_started = true; break;
+    case 's': motor_started = true; break;
     default:
       if (c >= '0' && c <= '9') {
         startMotor(c - '0');

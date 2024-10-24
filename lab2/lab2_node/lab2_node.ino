@@ -56,9 +56,9 @@ void setup() {
 }
 
 void loop() {
-  if (currentMillis - previousMillis >= interval) {
+  if (millis() - previousMillis >= interval) {
     // request data only every second
-    previousMillis = currentMillis;
+    previousMillis = millis();
     updateSensorData();
   };
 
@@ -74,7 +74,7 @@ void loop() {
   if (request.startsWith("GET /startMotor")) {
     handleMotorStart(client, request);
   } else {
-    sendResponse(client);
+    sendResponse(client, false, 0);
   }
   client.stop();
 
@@ -93,7 +93,7 @@ void handleMotorStart(WiFiClient client, String request) {
 
   if (duration >= 0 && duration <= 6) {
     startMotor((byte)duration);
-    sendResponse(client, true)
+    sendResponse(client, true, duration);
   } else {
     client.println("HTTP/1.1 400 Bad Request");
     client.println("Content-Type: text/plain");
@@ -102,7 +102,7 @@ void handleMotorStart(WiFiClient client, String request) {
   }
 }
 
-void sendResponse(WiFiClient client, bool motor_start_req = false) {
+void sendResponse(WiFiClient client, bool motor_start_req, int duration) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
   client.println("");
@@ -152,7 +152,7 @@ void sendResponse(WiFiClient client, bool motor_start_req = false) {
 
 void startMotor(byte duration) {
   SPI.beginTransaction(spi_settings);
-  SPI.transfer('m');
+  SPI.transfer('s');
   SPI.transfer(duration);
   SPI.endTransaction();
 }
@@ -211,7 +211,7 @@ byte requestData() {
   year = SPI.transfer('M');
   month = SPI.transfer('D');
   day = SPI.transfer('H');
-  hour = SPI.transfer('M');
+  hour = SPI.transfer('m');
   minute = SPI.transfer('S');
   second = SPI.transfer('l');
   light = SPI.transfer('h');
