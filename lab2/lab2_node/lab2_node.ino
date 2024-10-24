@@ -74,12 +74,14 @@ void loop() {
   if (request.startsWith("GET /startMotor")) {
     handleMotorStart(client, request);
   } else {
-    sendResponse(client, false, 0);
+    sendHtml(client);
   }
   client.stop();
 
-  delay(10);  
+  delay(50);  
 }
+
+
 
 void handleMotorStart(WiFiClient client, String request) {
   int duration = -1;
@@ -92,8 +94,7 @@ void handleMotorStart(WiFiClient client, String request) {
   }
 
   if (duration >= 0 && duration <= 6) {
-    startMotor((byte)duration);
-    sendResponse(client, true, duration);
+    startMotor(duration);
   } else {
     client.println("HTTP/1.1 400 Bad Request");
     client.println("Content-Type: text/plain");
@@ -102,7 +103,7 @@ void handleMotorStart(WiFiClient client, String request) {
   }
 }
 
-void sendResponse(WiFiClient client, bool motor_start_req, int duration) {
+void sendHtml(WiFiClient client) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
   client.println("");
@@ -120,23 +121,21 @@ void sendResponse(WiFiClient client, bool motor_start_req, int duration) {
   client.println("<body>");
   client.println("<h1>Sensor Data</h1>");
   client.println("<div class='sensor-data'>");
-  client.println("<p><strong>Date:</strong> " + dateString + "</p>");
-  client.println("<p><strong>Light:</strong> " + lightString + " Lux</p>");
-  client.println("<p><strong>Humidity:</strong> " + humidityString + " %</p>");
-  client.println("<p><strong>Temperature:</strong> " + temperatureString + " °C</p>");
-  client.println("<p><strong>Button State:</strong> " + buttonString + "</p>");
-  client.println("<p><strong>Motor Running:</strong> " + motorRunningString + "</p>");
-  if (motor_start_req) {
-    client.println("Motor started for " + String(duration) + " seconds.");
-  }
-  client.println("</div>");
+  client.println("<p><strong>Date:</strong> <span id='date'>" + dateString + "</span></p>");
+  client.println("<p><strong>Light:</strong> <span id='light'>" + lightString + "</span> Lux</p>");
+  client.println("<p><strong>Humidity:</strong> <span id='humidity'>" + humidityString + "</span> %</p>");
+  client.println("<p><strong>Temperature:</strong> <span id='temperature'>" + temperatureString + "</span> C</p>");
+  client.println("<p><strong>Button State:</strong> <span id='button'>" + buttonString + "</span></p>");
+  client.println("<p><strong>Motor Running:</strong> <span id='motor'>" + motorRunningString + "</span></p>");
+
 
   client.println("<div class='motor-control' style='margin: 0 20px;'>");
-  client.println("<label for='duration'>Motor Duration (0-6 seconds):</label>");
-  client.println("<input type='number' id='duration' name='duration' min='0' max='6' value='0'>");
+  client.println("<label for='duration'>Motor Duration (1-6 seconds):</label>");
+  client.println("<input type='number' id='duration' name='duration' min='1' max='6' value='1'>");
   client.println("<button onclick='startMotor()'>Start Motor</button>");
   client.println("</div>");
 
+  // start motor script
   client.println("<script>");
   client.println("function startMotor() {");
   client.println("  var duration = document.getElementById('duration').value;");
@@ -150,7 +149,7 @@ void sendResponse(WiFiClient client, bool motor_start_req, int duration) {
   client.println("</html>");
 }
 
-void startMotor(byte duration) {
+void startMotor(int duration) {
   SPI.beginTransaction(spi_settings);
   SPI.transfer('s');
   SPI.transfer(duration);
@@ -175,6 +174,7 @@ void updateSensorData() {
     buttonString = String(button, DEC);
     motorRunningString = String(motorRunning);
   }
+  Serial.println("");
 }
 
 String createDateString() {
@@ -203,7 +203,6 @@ String createDateString() {
 
 byte requestData() {
   SPI.beginTransaction(spi_settings);
-  Serial.println("Requesting data");
   SPI.transfer('d'); // Start data request, reset checksum
   // first req sets the data on other side
   // each response is for the previous req
@@ -238,5 +237,6 @@ byte calculateLocalChecksum() {
   calculatedChecksum += humidity;
   calculatedChecksum += temperature;
   calculatedChecksum += button;
+  calculatedChecksum += motorRunning;
   return calculatedChecksum;
 }

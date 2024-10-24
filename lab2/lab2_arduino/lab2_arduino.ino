@@ -328,9 +328,13 @@ void checkI2cDevices() {
 
 
 void startMotor(byte duration) {
-  Serial.println("Starting motor from node");
+  Serial.println("===================");
+  Serial.print("Starting motor from node for ");
   motor_started_time = millis();
   motor_run_time = duration * 1000;
+  Serial.print(motor_run_time);
+  Serial.println(" milisec");
+
 }
 
 
@@ -338,23 +342,23 @@ void startMotor(byte duration) {
 ISR(SPI_STC_vect) {
   char c = SPDR;
   switch (c) {
-    case 'd': checksum = 0; Serial.println("Started sending data"); break;
-    case 'Y': checksum += (SPDR = year); break;
-    case 'M': checksum += (SPDR = month); break;
-    case 'D': checksum += (SPDR = day); break;
-    case 'H': checksum += (SPDR = hour); break;
-    case 'm': checksum += (SPDR = minute); break;
-    case 'S': checksum += (SPDR = second); break;
-    case 'l': checksum += (SPDR = light); break;
-    case 'h': checksum += (SPDR = humidity); break;
-    case 't': checksum += (SPDR = temperature); break;
-    case 'b': checksum += (SPDR = button); break;
-    case 'r': checksum += (SPDR = motor_started); break;
-    case 'c': SPDR = checksum; Serial.println("Data sent, sending checksum"); break;
+    case 'd': checksum = 0; break;
+    case 'Y': SPDR = year; checksum += year; break;
+    case 'M': SPDR = month; checksum += month; break;
+    case 'D': SPDR = day; checksum += day; break;
+    case 'H': SPDR = hour; checksum += hour; break;
+    case 'm': SPDR = minute; checksum += minute; break;
+    case 'S': SPDR = second; checksum += second; break;
+    case 'l': SPDR = light; checksum += light; break;
+    case 'h': SPDR = humidity; checksum += humidity; break;
+    case 't': SPDR = temperature; checksum += temperature; break;
+    case 'b': SPDR = button; checksum += button; break;
+    case 'r': SPDR = motor_started; checksum += motor_started; break;
+    case 'c': SPDR = checksum; Serial.print("checksum  "); Serial.println(checksum); break;
     case 's': motor_started = true; break;
     default:
-      if (c >= '0' && c <= '9') {
-        startMotor(c - '0');
+      if (c >= 0 && c <= 9) {
+        startMotor(c);
       }
   }
   
