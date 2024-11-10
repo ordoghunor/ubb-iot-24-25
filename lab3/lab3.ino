@@ -84,19 +84,16 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 
 void setup(){
-  Serial.begin(115200);
+  Serial.begin(9600);
   
   // configure LED PWM functionalitites
-  ledcSetup(ledChannelRed, freq, resolution);
-  ledcAttachPin(redPin, ledChannelRed);
+  ledcAttachChannel(redPin, freq, resolution, ledChannelRed);
   ledcWrite(ledChannelRed, redSliderValue.toInt());
 
-  ledcSetup(ledChannelGreen, freq, resolution);
-  ledcAttachPin(greenPin, ledChannelGreen);
+  ledcAttachChannel(greenPin, freq, resolution, ledChannelGreen);
   ledcWrite(ledChannelGreen, greenSliderValue.toInt());
 
-  ledcSetup(ledChannelBlue, freq, resolution);
-  ledcAttachPin(bluePin, ledChannelBlue);
+  ledcAttachChannel(bluePin, freq, resolution, ledChannelBlue);
   ledcWrite(ledChannelBlue, blueSliderValue.toInt());
 
   WiFi.begin(ssid, password);
@@ -140,13 +137,13 @@ void handleSliderChange(AsyncWebServerRequest *request) {
 
   if (color == "red") {
     redSliderValue = value;
-    ledcWrite(ledChannelRed, redSliderValue.toInt());
+    ledcWrite(redPin, redSliderValue.toInt());
   } else if (color == "green") {
     greenSliderValue = value;
-    ledcWrite(ledChannelGreen, greenSliderValue.toInt());
+    ledcWrite(greenPin, greenSliderValue.toInt());
   } else if (color == "blue") {
     blueSliderValue = value;
-    ledcWrite(ledChannelBlue, blueSliderValue.toInt());
+    ledcWrite(bluePin, blueSliderValue.toInt());
   }
 
   Serial.println("Red: " + redSliderValue + " Green: " + greenSliderValue + " Blue: " + blueSliderValue);
