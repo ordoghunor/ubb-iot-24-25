@@ -2,8 +2,8 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
-const char* ssid = "TP-Link_871C";
-const char* password = "almakorte";
+const char* ssid = "Mateinfo";
+const char* password = "computer";
 
 int redPin = 16;     // Red RGB pin -> D3
 int greenPin = 22;   // Green RGB pin -> D5
@@ -45,38 +45,25 @@ const char index_html[] PROGMEM = R"rawliteral(
     </head>
     <body>
       <h2>ESP Web Server</h2>
-      <p>Red: <span id="textSliderRed">%REDSLIDERVALUE%</span></p>
-      <p><input type="range" onchange="updateSliderRed(this)" id="pwmSliderRed" min="0" max="255" value="%REDSLIDERVALUE%" step="1" class="slider"></p>
-      <p>Green: <span id="textSliderGreen">%GREENSLIDERVALUE%</span></p>
-      <p><input type="range" onchange="updateSliderGreen(this)" id="pwmSliderGreen" min="0" max="255" value="%GREENSLIDERVALUE%" step="1" class="slider"></p>
-      <p>Blue: <span id="textSliderBlue">%BLUESLIDERVALUE%</span></p>
-      <p><input type="range" onchange="updateSliderBlue(this)" id="pwmSliderBlue" min="0" max="255" value="%BLUESLIDERVALUE%" step="1" class="slider"></p>
-    <script>
-    function updateSliderRed(element) {
-      var sliderValue = document.getElementById("pwmSliderRed").value;
-      document.getElementById("textSliderRed").innerHTML = sliderValue;
-      console.log(sliderValue);
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "/slider?color=red&value="+sliderValue, true);
-      xhr.send();
-    }
-    function updateSliderGreen(element) {
-      var sliderValue = document.getElementById("pwmSliderGreen").value;
-      document.getElementById("textSliderGreen").innerHTML = sliderValue;
-      console.log(sliderValue);
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "/slider?color=green&value="+sliderValue, true);
-      xhr.send();
-    }
-    function updateSliderBlue(element) {
-      var sliderValue = document.getElementById("pwmSliderBlue").value;
-      document.getElementById("textSliderBlue").innerHTML = sliderValue;
-      console.log(sliderValue);
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "/slider?color=blue&value="+sliderValue, true);
-      xhr.send();
-    }
-    </script>
+      <p>Choose RGB Color:</p>
+      <input type="color" id="colorPicker" class="color-picker" value="#%REDSLIDERVALUE%">
+      <script>
+        // Set initial color picker value
+        document.getElementById('colorPicker').value = "#%REDSLIDERVALUE%";
+
+        // Listen for color changes
+        document.getElementById('colorPicker').addEventListener('input', function(e) {
+          var color = e.target.value;
+          var red = parseInt(color.substring(1, 3), 16);   // Extract red channel
+          var green = parseInt(color.substring(3, 5), 16); // Extract green channel
+          var blue = parseInt(color.substring(5, 7), 16);  // Extract blue channel
+
+          // Update the server with the new RGB values
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", "/slider?color=rgb&value=" + red + "," + green + "," + blue, true);
+          xhr.send();
+        });
+      </script>
     </body>
   </html>
 )rawliteral";
@@ -135,17 +122,21 @@ void handleSliderChange(AsyncWebServerRequest *request) {
   String color = request->getParam("color")->value();
   String value = request->getParam("value")->value();
 
-  if (color == "red") {
-    redSliderValue = value;
-    ledcWrite(redPin, redSliderValue.toInt());
-  } else if (color == "green") {
-    greenSliderValue = value;
-    ledcWrite(greenPin, greenSliderValue.toInt());
-  } else if (color == "blue") {
-    blueSliderValue = value;
-    ledcWrite(bluePin, blueSliderValue.toInt());
+  if (color == "rgb") {
+    int red = value.substring(0, value.indexOf(',')).toInt();
+    int green = value.substring(value.indexOf(',') + 1, value.lastIndexOf(',')).toInt();
+    int blue = value.substring(value.lastIndexOf(',') + 1).toInt();
+
+    ledcWrite(redPin, red);
+    ledcWrite(greenPin, green);
+    ledcWrite(bluePin, blue);
+
+    redSliderValue = String(red);
+    greenSliderValue = String(green);
+    blueSliderValue = String(blue);
+
+    Serial.println("Red: " + redSliderValue + " Green: " + greenSliderValue + " Blue: " + blueSliderValue);
   }
 
-  Serial.println("Red: " + redSliderValue + " Green: " + greenSliderValue + " Blue: " + blueSliderValue);
   request->send(200, "text/plain", "OK");
 }
