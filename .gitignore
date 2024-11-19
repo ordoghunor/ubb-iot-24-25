@@ -1,1 +1,20 @@
 *.zip
+build/
+.idea/
+bin/
+gradle/
+*.pdf
+!beamer/fig/*.pdf
+!references/*.pdf
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+*.bbl
+*.blg
+# !beamer/*.pdf
+*.nav
+*.out
+*.snm
+*.toc
