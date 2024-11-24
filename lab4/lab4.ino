@@ -9,7 +9,8 @@ const char* ssid = "Orange-vS2t-2.4G";
 const char* password = "n23TVMsE";
 
 // MQTT broker details
-const char* mqtt_server = "mqtt://localhost";
+const char* mqtt_server = "192.168.100.40";
+const int mqtt_port = 1883;
 const char* client_id = "ESP32_Client";
 const char* will_topic = "istvan/potmeter/status";
 const char* will_message = "disconnected";
@@ -19,10 +20,10 @@ PubSubClient client(espClient);
 WebServer server(80);
 
 // GPIO Pins
-const int potPin = 34;  // Potentiometer pin
-const int redPin = 25;  // Red LED pin
-const int greenPin = 26;  // Green LED pin
-const int bluePin = 27;  // Blue LED pin
+const int potPin = 0;  // Potentiometer pin
+const int redPin = 15;  // Red LED pin
+const int greenPin = 22;  // Green LED pin
+const int bluePin = 23;  // Blue LED pin
 
 // Topic names
 const char* potmeter_topic = "istvan/potmeter";
@@ -64,12 +65,12 @@ void reconnect() {
 }
 
 void handleRoot() {
-  String html = "<!DOCTYPE html><html>";
+   String html = "<!DOCTYPE html><html>";
   html += "<h1>ESP32 MQTT Control</h1>";
   html += "<label for='red'>Red:</label><input type='range' id='red' name='red' min='0' max='255' value='" + String(redValue) + "'><br>";
   html += "<label for='green'>Green:</label><input type='range' id='green' name='green' min='0' max='255' value='" + String(greenValue) + "'><br>";
   html += "<label for='blue'>Blue:</label><input type='range' id='blue' name='blue' min='0' max='255' value='" + String(blueValue) + "'><br>";
-  html += "<label for='wisdom'>Saját bölcsességeim:</label><input type='text' id='wisdom' name='wisdom'><br>";
+  html += "<label for='wisdom'>Sajat bolcsessegeim:</label><input type='text' id='wisdom' name='wisdom'><br>";
   html += "<button onclick='submitData()'>Submit</button>";
   html += "<script>function submitData() {";
   html += "let red = document.getElementById('red').value;";
@@ -113,7 +114,7 @@ void setup() {
   Serial.begin(115200);
   setup_wifi();
 
-  client.setServer(mqtt_server, 9001);
+  client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
 
   server.on("/", HTTP_GET, handleRoot);
@@ -135,5 +136,8 @@ void loop() {
 
   int potValue = analogRead(potPin);
   client.publish(potmeter_topic, String(potValue).c_str());
+  
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
   delay(500);
 }
