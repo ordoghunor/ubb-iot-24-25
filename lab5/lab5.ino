@@ -102,6 +102,7 @@ void setup() {
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(true);
   pAdvertising->setMinPreferred(0x0); // Set this to 0 if you want the default connection interval
+  BLEDevice::setPower(ESP_PWR_LVL_N12);
   BLEDevice::startAdvertising();
   Serial.println("Waiting for a client connection to notify...");
 }
