@@ -98,6 +98,101 @@
 %   \end{itemize}
 % \end{frame}
 
+\section[5G Main Application Areas]{5G Main Application Areas}
+
+\begin{frame}{5G Main Application Areas}
+  \vspace*{1.6em}
+  \begin{itemize}
+    \item Mobile Broadband (eMBB)
+    \vspace*{0.75em}
+    \item massive Machine Type Communications (mMTC)
+    \vspace*{0.75em}
+    \item Ultra Reliable and Low-Latency Communications (URLLC)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Overview of 5G application areas}
+  \hspace*{0.6em}
+  \includegraphics[scale=0.45]{beamer/fig/5g_application_areas.png}
+\end{frame}
+
+\begin{frame}{Mobile Broadband (eMBB)}
+  \vspace*{1.6em}
+  \begin{itemize}
+    \item delivery of voice and high-speed data
+    \vspace*{0.75em}
+    \item larger system capacity, data throughput, more efficient than 4G
+    \vspace*{0.75em}
+    \item Example: supports high-definition IoT cameras used for surveilliance
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{massive Machine Type Communications (mMTC)}
+  \vspace*{1.6em}
+  \begin{itemize}
+    \item machine-to-machine type communications
+    \vspace*{0.75em}
+    \item supports large number of IoT devices with diverse range of requirements in terms of bandwidth
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Ultra Reliable and Low-Latency Communications (URLLC)}
+  \vspace*{1.6em}
+  \begin{itemize}
+    \item very important part of 5G, vital for ultra-reliable and critical IoT systems
+    \vspace*{0.75em}
+    \item supports self-driving cars or enhanced factory automation applications
+  \end{itemize}
+\end{frame}
+
+\section[5G Implementations and Features]{5G Implementations and Features}
+
+\begin{frame}{Standalone and non-stanadlone 5G Network}
+  \vspace*{1.6em}
+  \begin{itemize}
+    \item 5G Network Components
+    \begin{itemize}
+        \item 5G RAN: Handles radio technologies and base stations.
+        \item 5G Core: Manages functions such as authentication, signaling, paging, mobility, and security.
+    \end{itemize}
+    \item Deployment Types
+    \begin{itemize}
+        \item Non-Standalone (NSA)Combines 5G RAN for data communication with the 4G core for signaling and control.
+        \item Standalone (SA): Both data and signal planes operate using the 5G core.
+    \end{itemize}
+    \item Most 5G networks today use the NSA deployment model.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Standalone and non-stanadlone 5G Network}
+  \hspace*{0.6em}
+  \includegraphics[scale=0.33]{beamer/fig/standalone_and_not.png}
+\end{frame}
+
+\begin{frame}{5G Network Slicing}
+  \begin{itemize}
+    \item Virtualizes the 5G network into multiple logical slices, each tailored to specific use cases, businesses, or customers.
+    \item Slices: eMBB, URLLC, mMTC
+    \item Slicing types
+    \begin{itemize}
+        \item Single Slicing: One slice per specific use case.
+        \item Bundle Slicing: Combines multiple slices for complex needs.
+    \end{itemize}
+    \item Examples
+    \begin{itemize}
+        \item Logistics: Low-latency, mobility-enabled slice.
+        \item Smart Cities: High-availability slices for fire alarms.
+        \item Stadiums: High-throughput eMBB slice for visitors.
+        \item Manufacturing: Reliable, low-latency URLLC slice.
+    \end{itemize}
+    \item Relies on Software-Defined Networking (SDN) and Network Function Virtualization (NFV) to dynamically configure and optimize the network.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Overview - 5G Slicing}
+  \hspace*{0.6em}
+  \includegraphics[scale=0.6]{beamer/fig/5g_slices.png}
+\end{frame}
 
 \section[Private 5G Network]{Private 5G Network}
 
