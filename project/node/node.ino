@@ -53,14 +53,25 @@ void setup() {
     request->send(200, "text/html", generateHtmlPage());
   });
 
-  // Handle motor start request
+  server.on("/getData", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String jsonData = "{";
+    jsonData += "\"date\":\"" + dateString + "\",";
+    jsonData += "\"light\":\"" + lightString + "\",";
+    jsonData += "\"humidity\":\"" + humidityString + "\",";
+    jsonData += "\"temperature\":\"" + temperatureString + "\",";
+    jsonData += "\"button\":\"" + buttonString + "\",";
+    jsonData += "\"motor\":\"" + motorRunningString + "\"";
+    jsonData += "}";
+    request->send(200, "application/json", jsonData);
+  });
+
   server.on("/startMotor", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (request->hasParam("duration")) {
       String durationParam = request->getParam("duration")->value();
       int duration = durationParam.toInt();
       if (duration >= 1 && duration <= 6) {
         startMotor(duration);
-        request->send(200, "text/plain", "Motor started for " + String(duration) + " seconds");
+        request->send(200, "text/plain", "{\"message\": \"Motor started for " + String(duration) + " seconds\"}");
       } else {
         request->send(400, "text/plain", "Invalid duration.");
       }
@@ -185,10 +196,32 @@ String generateHtmlPage() {
   html += "<div class='motor-control' style='margin: 0 20px;'>";
   html += "<label for='duration'>Motor Duration (1-6 seconds):</label>";
   html += "<input type='number' id='duration' name='duration' min='1' max='6' value='1'>";
-  html += "<button onclick='startMotor()'>Start Motor</button>";
-  html += "</div><script>function startMotor() {";
-  html += "var duration = document.getElementById('duration').value;";
-  html += "var xhr = new XMLHttpRequest(); xhr.open('GET', '/startMotor?duration=' + duration, true); xhr.send();";
-  html += "}</script></body></html>";
+  html += "<button onclick='startMotor()'>Start Motor</button></div>";
+
+  html += "<script>";
+  html += "function startMotor() {";
+  html += "  var duration = document.getElementById('duration').value;";
+  html += "  fetch('/startMotor?duration=' + duration, { method: 'GET' })";
+  html += "    .then(response => response.json())";
+  html += "    .then(data => {";
+  html += "      console.log(data);";
+  html += "    }).catch(error => console.error('Error starting motor:', error));";
+  html += "}";
+
+  html += "function updateSensorData() {";
+  html += "  fetch('/getData').then(response => response.json()).then(data => {";
+  html += "    document.getElementById('date').innerText = data.date;";
+  html += "    document.getElementById('light').innerText = data.light;";
+  html += "    document.getElementById('humidity').innerText = data.humidity;";
+  html += "    document.getElementById('temperature').innerText = data.temperature;";
+  html += "    document.getElementById('button').innerText = data.button;";
+  html += "    document.getElementById('motor').innerText = data.motor;";
+  html += "  }).catch(error => console.error('Error fetching data:', error));";
+  html += "}";
+
+  html += "setInterval(updateSensorData, 1000);";
+  html += "updateSensorData();";
+  html += "</script></body></html>";
   return html;
 }
+
