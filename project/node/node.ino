@@ -1,8 +1,9 @@
-#include<SPI.h>
+#include <SPI.h>
 #include <ESP8266WiFi.h>
+#include <ESPAsyncWebServer.h>
 
 SPISettings spi_settings(100000, MSBFIRST, SPI_MODE0); 
-//100 kHz
+// 100 kHz
 
 byte year;
 byte month;
@@ -26,16 +27,13 @@ String motorRunningString;
 unsigned long previousMillis = 0;
 const long interval = 600;
 
-
 const char* ssid = "Mateinfo";
 const char* password = "computer";
-WiFiServer server(80);
 
+AsyncWebServer server(80);
 
-
-
-void setup() {  
-  Serial.begin(9600);  
+void setup() {
+  Serial.begin(9600);
   SPI.begin();
 
   Serial.print("Connecting to ");
@@ -47,106 +45,38 @@ void setup() {
   }
   Serial.println("");
   Serial.println("WiFi connected");
+  Serial.print("Use this URL to connect: http://");
+  Serial.println(WiFi.localIP());
+
+  // Serve the main HTML page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/html", generateHtmlPage());
+  });
+
+  // Handle motor start request
+  server.on("/startMotor", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("duration")) {
+      String durationParam = request->getParam("duration")->value();
+      int duration = durationParam.toInt();
+      if (duration >= 1 && duration <= 6) {
+        startMotor(duration);
+        request->send(200, "text/plain", "Motor started for " + String(duration) + " seconds");
+      } else {
+        request->send(400, "text/plain", "Invalid duration.");
+      }
+    } else {
+      request->send(400, "text/plain", "Missing duration parameter.");
+    }
+  });
+
   server.begin();
-  Serial.println("Server started");
-  Serial.print("Use this URL to connect: ");
-  Serial.print("http://");
-  Serial.print(WiFi.localIP());
-  Serial.println("/");
 }
 
 void loop() {
   if (millis() - previousMillis >= interval) {
-    // request data only every second
     previousMillis = millis();
     updateSensorData();
-  };
-
-  WiFiClient client = server.available();
-  if (!client) {
-    return;
   }
-
-    // Read the first line of the request
-  String request = client.readStringUntil('\r');
-  Serial.println(request);
-  client.flush();
-  if (request.startsWith("GET /startMotor")) {
-    handleMotorStart(client, request);
-  } else {
-    sendHtml(client);
-  }
-  client.stop();
-
-  delay(50);  
-}
-
-
-
-void handleMotorStart(WiFiClient client, String request) {
-  int duration = -1;
-
-  if (request.indexOf("duration=") >= 0) {
-    int startIndex = request.indexOf("duration=") + 9;
-    int endIndex = request.indexOf(' ', startIndex);
-    String durationStr = request.substring(startIndex, endIndex);
-    duration = durationStr.toInt();
-  }
-
-  if (duration >= 0 && duration <= 6) {
-    startMotor(duration);
-  } else {
-    client.println("HTTP/1.1 400 Bad Request");
-    client.println("Content-Type: text/plain");
-    client.println("");
-    client.println("Invalid duration.");
-  }
-}
-
-void sendHtml(WiFiClient client) {
-  client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: text/html");
-  client.println("");
-  client.println("<!DOCTYPE HTML>");
-  client.println("<html>");
-  client.println("<head>");
-  client.println("<style>");
-  client.println("h1 { color: #333; }");
-  client.println("p { font-size: 18px; }");
-  client.println(".sensor-data { margin: 0 50px; }");
-  client.println("button { margin-top: 10px; }");
-  client.println("</style>");
-  client.println("</head>");
-
-  client.println("<body>");
-  client.println("<h1>Sensor Data</h1>");
-  client.println("<div class='sensor-data'>");
-  client.println("<p><strong>Date:</strong> <span id='date'>" + dateString + "</span></p>");
-  client.println("<p><strong>Light:</strong> <span id='light'>" + lightString + "</span> Lux</p>");
-  client.println("<p><strong>Humidity:</strong> <span id='humidity'>" + humidityString + "</span> %</p>");
-  client.println("<p><strong>Temperature:</strong> <span id='temperature'>" + temperatureString + "</span> C</p>");
-  client.println("<p><strong>Button State:</strong> <span id='button'>" + buttonString + "</span></p>");
-  client.println("<p><strong>Motor Running:</strong> <span id='motor'>" + motorRunningString + "</span></p>");
-
-
-  client.println("<div class='motor-control' style='margin: 0 20px;'>");
-  client.println("<label for='duration'>Motor Duration (1-6 seconds):</label>");
-  client.println("<input type='number' id='duration' name='duration' min='1' max='6' value='1'>");
-  client.println("<button onclick='startMotor()'>Start Motor</button>");
-  client.println("</div>");
-
-  // start motor script
-  client.println("<script>");
-  client.println("function startMotor() {");
-  client.println("  var duration = document.getElementById('duration').value;");
-  client.println("  var xhr = new XMLHttpRequest();");
-  client.println("  xhr.open('GET', '/startMotor?duration=' + duration, true);");
-  client.println("  xhr.send();");
-  client.println("}");
-  client.println("</script>");
-
-  client.println("</body>");
-  client.println("</html>");
 }
 
 void startMotor(int duration) {
@@ -160,7 +90,6 @@ void updateSensorData() {
   byte receivedChecksum = requestData();
   byte localChecksum = calculateLocalChecksum();
   if (receivedChecksum != localChecksum) {
-    // error receiving data
     Serial.println("Error receiving sensor data.");
     Serial.print("Received checksum: ");
     Serial.println(receivedChecksum, DEC);
@@ -239,4 +168,27 @@ byte calculateLocalChecksum() {
   calculatedChecksum += button;
   calculatedChecksum += motorRunning;
   return calculatedChecksum;
+}
+
+String generateHtmlPage() {
+  String html = "<!DOCTYPE HTML>";
+  html += "<html><head><style>";
+  html += "h1 { color: #333; } p { font-size: 18px; } .sensor-data { margin: 0 50px; } button { margin-top: 10px; }";
+  html += "</style></head><body>";
+  html += "<h1>Sensor Data</h1><div class='sensor-data'>";
+  html += "<p><strong>Date:</strong> <span id='date'>" + dateString + "</span></p>";
+  html += "<p><strong>Light:</strong> <span id='light'>" + lightString + "</span> Lux</p>";
+  html += "<p><strong>Humidity:</strong> <span id='humidity'>" + humidityString + "</span> %</p>";
+  html += "<p><strong>Temperature:</strong> <span id='temperature'>" + temperatureString + "</span> C</p>";
+  html += "<p><strong>Button State:</strong> <span id='button'>" + buttonString + "</span></p>";
+  html += "<p><strong>Motor Running:</strong> <span id='motor'>" + motorRunningString + "</span></p>";
+  html += "<div class='motor-control' style='margin: 0 20px;'>";
+  html += "<label for='duration'>Motor Duration (1-6 seconds):</label>";
+  html += "<input type='number' id='duration' name='duration' min='1' max='6' value='1'>";
+  html += "<button onclick='startMotor()'>Start Motor</button>";
+  html += "</div><script>function startMotor() {";
+  html += "var duration = document.getElementById('duration').value;";
+  html += "var xhr = new XMLHttpRequest(); xhr.open('GET', '/startMotor?duration=' + duration, true); xhr.send();";
+  html += "}</script></body></html>";
+  return html;
 }
