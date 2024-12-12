@@ -1,6 +1,9 @@
 #include <SPI.h>
 #include <ESP8266WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <Firebase_ESP_Client.h>
+#include "addons/TokenHelper.h"
+#include "addons/RTDBHelper.h"
 
 SPISettings spi_settings(100000, MSBFIRST, SPI_MODE0); 
 // 100 kHz
@@ -29,6 +32,14 @@ const long interval = 600;
 
 const char* ssid = "Mateinfo";
 const char* password = "computer";
+
+#define API_KEY "AIzaSyBc0-NTp3oeJFd4o9l1SBQvvDRv8XsJwCk"
+#define DATABASE_URL "https://iot-hln-default-rtdb.europe-west1.firebasedatabase.app/"
+
+bool signupOK = false;
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
 
 AsyncWebServer server(80);
 
@@ -80,6 +91,26 @@ void setup() {
     }
   });
 
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_URL;
+  config.token_status_callback = tokenStatusCallback;
+  
+  if (Firebase.signUp(&config, &auth, "", "")){
+    Serial.println("Firebase signup succesfull. ");
+    signupOK = true;
+  } else{
+    Serial.printf("%s\n", config.signer.signupError.message.c_str());
+  }
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
+
+  if (Firebase.ready() && signupOK) {
+    Serial.println("Firebase signup succesfull. ");
+    if (!Firebase.RTDB.setInt(&fbdo, "test/int", 1)){
+      Serial.println("Saving failed: " + fbdo.errorReason());
+    }
+  }
+  
   server.begin();
 }
 
@@ -114,7 +145,6 @@ void updateSensorData() {
     buttonString = String(button, DEC);
     motorRunningString = String(motorRunning);
   }
-  Serial.println("");
 }
 
 String createDateString() {
@@ -219,7 +249,7 @@ String generateHtmlPage() {
   html += "  }).catch(error => console.error('Error fetching data:', error));";
   html += "}";
 
-  html += "setInterval(updateSensorData, 1000);";
+  html += "setInterval(updateSensorData, 900);";
   html += "updateSensorData();";
   html += "</script></body></html>";
   return html;
