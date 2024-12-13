@@ -28,7 +28,12 @@ String buttonString;
 String motorRunningString;
 
 unsigned long previousMillis = 0;
-const long interval = 600;
+unsigned long previousMillisFirebase = 0;
+const long interval = 500;
+const long intervalFirebase = 5000;
+
+String nextLastKey = "";
+String currentDate = "";
 
 const char* ssid = "Mateinfo";
 const char* password = "computer";
@@ -103,13 +108,6 @@ void setup() {
   }
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
-
-  if (Firebase.ready() && signupOK) {
-    Serial.println("Firebase signup succesfull. ");
-    if (!Firebase.RTDB.setInt(&fbdo, "test/int", 1)){
-      Serial.println("Saving failed: " + fbdo.errorReason());
-    }
-  }
   
   server.begin();
 }
@@ -119,6 +117,12 @@ void loop() {
     previousMillis = millis();
     updateSensorData();
   }
+  if (millis() - previousMillisFirebase >= intervalFirebase) {
+    previousMillisFirebase = millis();
+    saveDataToFirebase();
+    getPaginatedFirebaseData(currentDate, nextLastKey, 15);
+  }
+  delay(500);
 }
 
 void startMotor(int duration) {
@@ -144,6 +148,12 @@ void updateSensorData() {
     temperatureString = String(temperature, DEC);
     buttonString = String(button, DEC);
     motorRunningString = String(motorRunning);
+
+    if (currentDate == "") {
+      currentDate = "20" + String(year, DEC) + "-";
+      currentDate += (month < 10 ? "0" : "") + String(month, DEC) + "-";
+      currentDate += (day < 10 ? "0" : "") + String(day, DEC);
+    }
   }
 }
 
@@ -253,5 +263,58 @@ String generateHtmlPage() {
   html += "updateSensorData();";
   html += "</script></body></html>";
   return html;
+}
+
+void saveDataToFirebase() {
+  FirebaseJson json;
+  json.set("time", dateString);
+  json.set("light", light);
+  json.set("humidity", humidity);
+  json.set("temperature", temperature);
+  json.set("button", button);
+  json.set("motorRunning", motorRunning);
+
+  String path = "/sensorData/" + currentDate;
+  if (Firebase.RTDB.pushJSON(&fbdo, path, &json)) {
+  } else {
+    Serial.println("Error saving data: " + fbdo.errorReason());
+  }
+}
+
+void getPaginatedFirebaseData(String date, String lastKey, int limit) {
+  if (date.isEmpty()) {
+    Serial.println("Error: No date provided for fetching data.");
+    return;
+  }
+  String path = "/sensorData/" + date;
+  QueryFilter query;
+  query.orderBy("$key");
+  if (!lastKey.isEmpty()) {
+    query.startAt(lastKey);
+  }
+  query.limitToFirst(limit);
+
+  if (Firebase.RTDB.getJSON(&fbdo, path, &query)) {
+    if (fbdo.dataType() == "json") {
+      FirebaseJson &json = fbdo.jsonObject();
+      size_t dataCount = json.iteratorBegin();
+
+      for (size_t i = 0; i < dataCount; i++) {
+        String key, value;
+        int type;
+        json.iteratorGet(i, type, key, value);
+
+        if (value.startsWith("{")) {
+          Serial.println("Key: " + key + " Value: " + value);
+          nextLastKey = key;
+        }
+      }
+      json.iteratorEnd();
+    } else {
+        Serial.println("No sensor data found for the specified date.");
+    }
+    } else {
+        Serial.println("Error fetching data: " + fbdo.errorReason());
+    }
 }
 
