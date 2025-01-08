@@ -34,8 +34,8 @@ const long intervalFirebase = 5000;
 
 String currentDate = "";
 
-const char* ssid = "Mateinfo";
-const char* password = "computer";
+const char* ssid = "TP-Link_871C";
+const char* password = "almakorte";
 
 #define API_KEY "AIzaSyBc0-NTp3oeJFd4o9l1SBQvvDRv8XsJwCk"
 #define DATABASE_URL "https://iot-hln-default-rtdb.europe-west1.firebasedatabase.app/"
@@ -224,25 +224,50 @@ byte calculateLocalChecksum() {
 String generateHtmlPage() {
   String html = "<!DOCTYPE HTML>";
   html += "<html><head><style>";
-  html += "h1 { color: #333; } p { font-size: 18px; } .sensor-data { margin: 0 50px; } button { margin-top: 10px; }";
-  html += "canvas { max-width: 100%; height: auto; margin-top: 50px }";
+  html += "h1 { color: #333; margin-bottom: 20px; }";
+  html += "p { font-size: 18px; }";
+  html += ".sensor-data { margin-bottom: 30px; }";
+  html += "button { margin-top: 10px; }";
+  html += "canvas { max-width: 100%; height: 300px; margin-top: 20px; }"; // Smaller chart
   html += "</style>";
+  html += "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css'>";
   html += "<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>"; // Include Chart.js
-  html += "</head><body>";
-  html += "<h1>Sensor Data</h1><div class='sensor-data'>";
-  html += "<p><strong>Date:</strong> <span id='date'>" + dateString + "</span></p>";
-  html += "<p><strong>Light:</strong> <span id='light'>" + lightString + "</span> Lux</p>";
-  html += "<p><strong>Humidity:</strong> <span id='humidity'>" + humidityString + "</span> %</p>";
-  html += "<p><strong>Temperature:</strong> <span id='temperature'>" + temperatureString + "</span> C</p>";
-  html += "<p><strong>Button State:</strong> <span id='button'>" + buttonString + "</span></p>";
-  html += "<p><strong>Motor Running:</strong> <span id='motor'>" + motorRunningString + "</span></p>";
-  html += "<div class='motor-control' style='margin: 0 20px;'>";
+  html += "</head><body class='bg-light'>";
+  html += "<div class='container my-5'>";
+  html += "<h1 class='text-center'>Sensor Data</h1>";
+  
+  // Sensor Data Display Section
+  html += "<div class='sensor-data'>";
+  html += "<div class='row'>";
+  html += "  <div class='col-md-6'><p><strong>Date:</strong> <span id='date'>" + dateString + "</span></p></div>";
+  html += "  <div class='col-md-6'><p><strong>Light:</strong> <span id='light'>" + lightString + "</span> Lux</p></div>";
+  html += "</div>";
+  html += "<div class='row'>";
+  html += "  <div class='col-md-6'><p><strong>Humidity:</strong> <span id='humidity'>" + humidityString + "</span> %</p></div>";
+  html += "  <div class='col-md-6'><p><strong>Temperature:</strong> <span id='temperature'>" + temperatureString + "</span> °C</p></div>";
+  html += "</div>";
+  html += "<div class='row'>";
+  html += "  <div class='col-md-6'><p><strong>Button State:</strong> <span id='button'>" + buttonString + "</span></p></div>";
+  html += "  <div class='col-md-6'><p><strong>Motor Running:</strong> <span id='motor'>" + motorRunningString + "</span></p></div>";
+  html += "</div>";
+  html += "</div>";
+
+  // Motor Control Section
+  html += "<div class='motor-control mb-4'>";
   html += "<label for='duration'>Motor Duration (1-6 seconds):</label>";
-  html += "<input type='number' id='duration' name='duration' min='1' max='6' value='1'>";
-  html += "<button onclick='startMotor()'>Start Motor</button></div>";
+  html += "<input type='number' class='form-control w-25 d-inline-block ms-2' id='duration' name='duration' min='1' max='6' value='1'>";
+  html += "<button class='btn btn-primary ml-2' onclick='startMotor()'>Start Motor</button>";
+  html += "</div>";
 
-  html += "<canvas id='sensorGraph'></canvas>";
+  // Chart Section
+  html += "<div class='card'>";
+  html += "  <div class='card-body'>";
+  html += "    <h5 class='card-title'>Sensor Data Over Time</h5>";
+  html += "    <canvas id='sensorGraph'></canvas>";
+  html += "  </div>";
+  html += "</div>";
 
+  // JavaScript for Chart and Sensor Data Update
   html += "<script>";
   html += "function startMotor() {";
   html += "  var duration = document.getElementById('duration').value;";
@@ -294,9 +319,11 @@ String generateHtmlPage() {
 
   html += "setInterval(updateSensorData, 900);";
   html += "updateSensorData();";
-  html += "</script></body></html>";
+  html += "</script>";
+  html += "</div></body></html>";
   return html;
 }
+
 
 void saveDataToFirebase() {
   FirebaseJson json;
