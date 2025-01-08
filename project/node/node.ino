@@ -96,6 +96,17 @@ void setup() {
     }
   });
 
+  server.on("/getOlderData", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("time")) {
+      String timeParam = request->getParam("time")->value();
+      Serial.println(timeParam);
+      String data = "{}";
+      request->send(200, "application/json", "{\"data\": \"" + data + "\"}");
+    } else {
+        request->send(400, "text/plain", "Missing time parameter.");
+    }
+});
+
   config.api_key = API_KEY;
   config.database_url = DATABASE_URL;
   config.token_status_callback = tokenStatusCallback;
@@ -223,15 +234,15 @@ byte calculateLocalChecksum() {
 
 String generateHtmlPage() {
   String html = "<!DOCTYPE HTML>";
-  html += "<html><head><style>";
+  html += "<html><head><meta charset=\"UTF-8\"><style>";
   html += "h1 { color: #333; margin-bottom: 20px; }";
   html += "p { font-size: 18px; }";
   html += ".sensor-data { margin-bottom: 30px; }";
   html += "button { margin-top: 10px; }";
-  html += "canvas { max-width: 100%; height: 300px; margin-top: 20px; }"; // Smaller chart
+  html += "canvas { max-width: 100%; height: 300px; margin-top: 20px; }";
   html += "</style>";
   html += "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css'>";
-  html += "<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>"; // Include Chart.js
+  html += "<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>";
   html += "</head><body class='bg-light'>";
   html += "<div class='container my-5'>";
   html += "<h1 class='text-center'>Sensor Data</h1>";
@@ -255,7 +266,7 @@ String generateHtmlPage() {
   // Motor Control Section
   html += "<div class='motor-control mb-4'>";
   html += "<label for='duration'>Motor Duration (1-6 seconds):</label>";
-  html += "<input type='number' class='form-control w-25 d-inline-block ms-2' id='duration' name='duration' min='1' max='6' value='1'>";
+  html += "<input type='number' class='form-control w-25 d-inline-block ml-2' id='duration' name='duration' min='1' max='6' value='1'>";
   html += "<button class='btn btn-primary ml-2' onclick='startMotor()'>Start Motor</button>";
   html += "</div>";
 
@@ -265,6 +276,13 @@ String generateHtmlPage() {
   html += "    <h5 class='card-title'>Sensor Data Over Time</h5>";
   html += "    <canvas id='sensorGraph'></canvas>";
   html += "  </div>";
+  html += "</div>";
+
+  html += "<div class='mt-5 d-flex flex-column align-items-center justify-content-center'>";
+  html += "<h3>Retrieve Older Data</h3>";
+  html += "<label for='timePicker'>Select Time:</label>";
+  html += "<input type='datetime-local' id='timePicker' class='form-control w-25'>";
+  html += "<button class='btn btn-primary mt-2' onclick='fetchOlderData()'>Fetch Data</button>";
   html += "</div>";
 
   // JavaScript for Chart and Sensor Data Update
@@ -316,6 +334,20 @@ String generateHtmlPage() {
   html += "    scales: { x: { title: { display: true, text: 'Time' } }, y: { title: { display: true, text: 'Values' } } }";
   html += "  }";
   html += "});";
+
+  html += "function fetchOlderData() {";
+  html += "  var time = document.getElementById('timePicker').value;";
+  html += "  if (time) {";
+  html += "    var formattedTime = time.replace('T', ' ').substring(0, 19);";
+  html += "    fetch('/getOlderData?time=' + formattedTime, { method: 'GET' })";
+  html += "      .then(response => response.json())";
+  html += "      .then(data => {";
+  html += "        console.log(data);";
+  html += "      }).catch(error => console.error('Error fetching data:', error));";
+  html += "  } else {";
+  html += "    alert('Please select a valid time.');";
+  html += "  }";
+  html += "}";
 
   html += "setInterval(updateSensorData, 900);";
   html += "updateSensorData();";
